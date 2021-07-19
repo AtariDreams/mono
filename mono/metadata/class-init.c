@@ -204,7 +204,7 @@ mono_class_setup_basic_field_info (MonoClass *klass)
 	/*
 	 * Fetch all the field information.
 	 */
-	int first_field_idx = mono_class_has_static_metadata (klass) ? mono_class_get_first_field_idx (klass) : 0;
+	guint32 first_field_idx = mono_class_has_static_metadata (klass) ? mono_class_get_first_field_idx (klass) : 0;
 	for (i = 0; i < top; i++) {
 		field = &fields [i];
 		field->parent = klass;
@@ -212,7 +212,7 @@ mono_class_setup_basic_field_info (MonoClass *klass)
 		if (gtd) {
 			field->name = mono_field_get_name (&gtd->fields [i]);
 		} else {
-			int idx = first_field_idx + i;
+			guint32 idx = first_field_idx + i;
 			/* first_field_idx and idx points into the fieldptr table */
 			guint32 name_idx = mono_metadata_decode_table_row_col (image, MONO_TABLE_FIELD, idx, MONO_FIELD_NAME);
 			/* The name is needed for fieldrefs */
@@ -248,12 +248,12 @@ mono_class_setup_fields (MonoClass *klass)
 {
 	ERROR_DECL (error);
 	MonoImage *m = klass->image;
-	int top;
+	guint32 top;
 	guint32 layout = mono_class_get_flags (klass) & TYPE_ATTRIBUTE_LAYOUT_MASK;
-	int i;
+	guint32 i;
 	guint32 real_size = 0;
 	guint32 packing_size = 0;
-	int instance_size;
+	guint32 instance_size;
 	gboolean explicit_size;
 	MonoClassField *field;
 	MonoGenericClass *gklass = mono_class_try_get_generic_class (klass);
@@ -318,7 +318,7 @@ mono_class_setup_fields (MonoClass *klass)
 	/*
 	 * Fetch all the field information.
 	 */
-	int first_field_idx = mono_class_has_static_metadata (klass) ? mono_class_get_first_field_idx (klass) : 0;
+	guint32 first_field_idx = mono_class_has_static_metadata (klass) ? mono_class_get_first_field_idx (klass) : 0;
 	for (i = 0; i < top; i++) {
 		int idx = first_field_idx + i;
 		field = &klass->fields [i];
@@ -1296,8 +1296,8 @@ make_generic_param_class (MonoGenericParam *param)
 	// Count non-NULL items in pinfo->constraints
 	count = 0;
 	if (!is_anonymous)
-		for (ptr = pinfo->constraints; ptr && *ptr; ptr++, count++)
-			;
+		for (ptr = pinfo->constraints; ptr && *ptr; ptr++)
+			count++;
 
 	pos = 0;
 	if ((count > 0) && !MONO_CLASS_IS_INTERFACE_INTERNAL (pinfo->constraints [0])) {
@@ -1309,7 +1309,7 @@ make_generic_param_class (MonoGenericParam *param)
 		CHECKED_METADATA_WRITE_PTR ( klass->parent , mono_defaults.object_class );
 	}
 
-	if (count - pos > 0) {
+	if (count > pos) {
 		klass->interface_count = count - pos;
 		CHECKED_METADATA_WRITE_PTR_LOCAL ( klass->interfaces , (MonoClass **)mono_image_alloc0 (image, sizeof (MonoClass *) * (count - pos)) );
 		klass->interfaces_inited = TRUE;
@@ -1349,7 +1349,7 @@ make_generic_param_class (MonoGenericParam *param)
 
 	mono_class_setup_supertypes (klass);
 
-	if (count - pos > 0) {
+	if (count > pos) {
 		mono_class_setup_vtable (klass->parent);
 		if (mono_class_has_failure (klass->parent))
 			mono_class_set_type_load_failure (klass, "Failed to setup parent interfaces");
