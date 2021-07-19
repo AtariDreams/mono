@@ -298,10 +298,12 @@ field_from_memberref (MonoImage *image, guint32 token, MonoClass **retklass,
 	mono_metadata_decode_blob_size (ptr, &ptr);
 	/* we may want to check the signature here... */
 
-	if (*ptr++ != 0x6) {
+	if (*ptr != 0x6) {
 		mono_error_set_field_missing (error, klass, fname, NULL, "Bad field signature class token %08x field token %08x", class_index, token);
 		return NULL;
 	}
+
+	ptr++;
 
 	/* FIXME: This needs a cache, especially for generic instances, since
 	 * we ask mono_metadata_parse_type_checked () to allocates everything from a mempool.
@@ -2024,10 +2026,10 @@ get_method_update_rva (MonoImage *image_base, uint32_t idx)
 {
 	gpointer loc = NULL;
 	uint32_t cur = mono_metadata_update_get_thread_generation ();
-	GList *ptr = image_base->delta_image;
+	GList *ptr;
 	/* Go through all the updates that the current thread can see and see
 	 * if they updated the method.  Keep the latest visible update */
-	for (; ptr != NULL; ptr = ptr->next) {
+	for (ptr = image_base->delta_image; ptr != NULL; ptr = ptr->next) {
 		MonoImage *image_delta = (MonoImage*) ptr->data;
 		if (image_delta->generation > cur)
 			break;
@@ -2166,7 +2168,7 @@ guint32
 mono_method_get_index (MonoMethod *method)
 {
 	MonoClass *klass = method->klass;
-	int i;
+	guint32 i;
 
 	if (m_class_get_rank (klass))
 		/* constructed array methods are not in the MethodDef table */
@@ -2178,8 +2180,8 @@ mono_method_get_index (MonoMethod *method)
 	mono_class_setup_methods (klass);
 	if (mono_class_has_failure (klass))
 		return 0;
-	int first_idx = mono_class_get_first_method_idx (klass);
-	int mcount = mono_class_get_method_count (klass);
+	guint32 first_idx = mono_class_get_first_method_idx (klass);
+	guint32 mcount = mono_class_get_method_count (klass);
 	MonoMethod **klass_methods = m_class_get_methods (klass);
 	for (i = 0; i < mcount; ++i) {
 		if (method == klass_methods [i]) {
