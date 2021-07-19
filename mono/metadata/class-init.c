@@ -169,7 +169,7 @@ mono_class_setup_basic_field_info (MonoClass *klass)
 	MonoClassField *fields;
 	MonoClass *gtd;
 	MonoImage *image;
-	int i, top;
+	guint32 i, top;
 
 	if (klass->fields)
 		return;
@@ -1011,7 +1011,7 @@ mono_class_create_bounded_array (MonoClass *eclass, guint32 rank, gboolean bound
 	MonoClass *klass, *cached, *k;
 	MonoClass *parent = NULL;
 	GSList *list, *rootlist = NULL;
-	int nsize;
+	size_t nsize;
 	char *name;
 	MonoImageSet* image_set;
 
@@ -1082,7 +1082,7 @@ mono_class_create_bounded_array (MonoClass *eclass, guint32 rank, gboolean bound
 	klass->class_kind = MONO_CLASS_ARRAY;
 
 	nsize = strlen (eclass->name);
-	int maxrank = MIN (rank, 32);
+	guint32 maxrank = MIN (rank, 32);
 	name = (char *)g_malloc (nsize + 2 + maxrank + 1);
 	memcpy (name, eclass->name, nsize);
 	name [nsize] = '[';
